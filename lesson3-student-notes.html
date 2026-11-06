@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elimination Student Notes</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --ink: #1f2937;
+    --muted: #5b6475;
+    --line: #d7dce6;
+    --accent: #2f5bd3;
+    --accent-soft: #e8eefc;
+    --good: #1b7f3b;
+    --good-soft: #e3f5e8;
+    --bad: #b42318;
+    --bad-soft: #fde8e6;
+    --help: #8a5a00;
+    --help-soft: #fff4d6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 42%);
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  main { padding: 24px 20px 64px; min-width: 0; }
+  header.top {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 20px;
+  }
+  header.top h1 { margin: 0 0 6px; font-size: 1.5rem; }
+  header.top p { margin: 0; opacity: .95; }
+  .howto {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: .95rem;
+  }
+  .howto ol { margin: 6px 0 0; padding-left: 22px; }
+  .pill { display: inline-block; padding: 1px 9px; border-radius: 999px; font-weight: 600; font-size: .85rem; }
+  .pill.check { background: var(--accent); color: #fff; }
+  .pill.help { background: var(--help-soft); color: var(--help); border: 1px solid #f0d58a; }
+
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px 20px;
+    margin-bottom: 20px;
+  }
+  .card h2 { margin: 0 0 4px; font-size: 1.2rem; }
+  .card .tag { color: var(--muted); font-size: .9rem; margin: 0 0 12px; }
+
+  .system {
+    display: inline-block;
+    background: var(--accent-soft);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: "Cambria Math", Cambria, Georgia, serif;
+    font-size: 1.25rem;
+    line-height: 1.6;
+    margin: 4px 0 14px;
+  }
+  .math { font-family: "Cambria Math", Cambria, Georgia, serif; font-size: 1.1rem; }
+
+  ol.steps { margin: 0; padding-left: 24px; }
+  ol.steps li { margin-bottom: 6px; }
+
+  .row { margin: 12px 0; }
+  .row > .label { display: block; font-weight: 600; margin-bottom: 4px; }
+  .row .hint-text { color: var(--muted); font-size: .88rem; font-weight: 400; }
+  .line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+  input.box, select.box {
+    font: inherit;
+    font-family: "Cambria Math", Cambria, Georgia, serif;
+    padding: 6px 10px;
+    border: 2px solid #9aa6bd;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink);
+    min-width: 0;
+  }
+  input.box { width: 90px; text-align: center; }
+  input.box.wide { width: 150px; }
+  select.box { font-family: inherit; font-size: .95rem; max-width: 100%; }
+  input.box:focus, select.box:focus { outline: 3px solid #b9c9f5; border-color: var(--accent); }
+  .box.right { border-color: var(--good); background: var(--good-soft); }
+  .box.wrong { border-color: var(--bad); background: var(--bad-soft); }
+
+  /* ---------- split-screen scratch board ---------- */
+  .pad {
+    position: sticky; top: 0;
+    height: 100vh; height: 100dvh;
+    display: flex; flex-direction: column;
+    padding: 16px 16px 16px 4px;
+  }
+  .pad-inner {
+    flex: 1; min-height: 0;
+    display: flex; flex-direction: column;
+    background: var(--card);
+    border: 2px solid #9aa6bd;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .pad-head {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .pad-head .grow { flex: 1; min-width: 0; }
+  .pad-title { font-weight: 700; }
+  .pad-title small { font-weight: 400; color: var(--muted); }
+  .pad-problem { margin-top: 4px; }
+  .pad-problem .system { margin: 0; font-size: 1.05rem; padding: 4px 12px; }
+  .pad-problem .note { color: var(--muted); font-size: .95rem; }
+  .pad-close { display: none; background: var(--accent); color: #fff; padding: 8px 14px; font-size: .95rem; }
+  .pad .tools {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    padding: 6px 8px; background: #eef1f7; border-bottom: 1px solid var(--line);
+  }
+  .pad .tools button {
+    font-size: .9rem; padding: 6px 12px; border-radius: 8px;
+    background: #fff; color: var(--ink); border: 2px solid var(--line); font-weight: 600;
+  }
+  .pad .tools button.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .pad .tools .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-right: 4px; }
+  .pad .tools .spacer { flex: 1; }
+  .pad-stage {
+    flex: 1; min-height: 0;
+    display: flex; justify-content: flex-start; align-items: flex-start;
+    overflow: hidden; position: relative;
+    background: #f1f3f8;
+  }
+  .pad-stage canvas {
+    display: none;
+    touch-action: none; cursor: crosshair;
+    background-color: #fff;
+    background-image:
+      linear-gradient(#e9edf5 1px, transparent 1px),
+      linear-gradient(90deg, #e9edf5 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .pad-stage canvas.active { display: block; }
+  .pad-open { display: none; }
+
+  @media (max-width: 900px) {
+    .layout { display: block; }
+    main { max-width: 820px; margin: 0 auto; padding: 24px 16px 96px; }
+    .pad { display: none; }
+    .pad-open {
+      display: block; position: fixed; right: 16px; bottom: 16px; z-index: 20;
+      background: var(--accent); color: #fff;
+      border-radius: 999px; padding: 12px 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    }
+    body.pad-full { overflow: hidden; }
+    body.pad-full .pad {
+      display: flex; position: fixed; inset: 0; z-index: 30;
+      height: auto; padding: 8px; background: var(--bg);
+    }
+    body.pad-full .pad-close { display: inline-block; }
+    body.pad-full .pad-open { display: none; }
+  }
+
+  table.options { width: 100%; border-collapse: collapse; }
+  table.options th, table.options td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.options th { font-size: .9rem; color: var(--muted); font-weight: 600; }
+  table.options td:first-child { font-weight: 700; white-space: nowrap; }
+  table.options select { width: 100%; }
+
+  .buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  button {
+    font: inherit;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 9px 18px;
+    cursor: pointer;
+    border: 2px solid transparent;
+  }
+  button.check { background: var(--accent); color: #fff; }
+  button.check:hover { filter: brightness(1.08); }
+  button.help { background: var(--help-soft); color: var(--help); border-color: #f0d58a; }
+  button.help:hover { filter: brightness(.97); }
+
+  .feedback { margin-top: 12px; padding: 10px 14px; border-radius: 10px; display: none; font-weight: 600; }
+  .feedback.good { display: block; background: var(--good-soft); color: var(--good); }
+  .feedback.bad { display: block; background: var(--bad-soft); color: var(--bad); }
+
+  .hints { margin-top: 12px; display: none; }
+  .hints.show { display: block; }
+  .hints p {
+    margin: 0 0 8px;
+    background: var(--help-soft);
+    border-left: 4px solid #e0b33c;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: .95rem;
+  }
+
+  .progress {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--bg);
+    padding: 8px 0 10px;
+    margin-bottom: 8px;
+    font-size: .9rem; color: var(--muted);
+  }
+  .bar { height: 10px; background: #dde3ee; border-radius: 999px; overflow: hidden; margin-top: 4px; }
+  .bar > div { height: 100%; width: 0; background: var(--good); transition: width .3s; }
+
+  .reset { text-align: center; margin-top: 10px; }
+  .reset button { background: transparent; color: var(--muted); border-color: var(--line); font-weight: 500; font-size: .9rem; }
+
+  @media (max-width: 560px) {
+    body { font-size: 17px; }
+    table.options thead { display: none; }
+    table.options tr { display: block; border-bottom: 1px solid var(--line); padding: 6px 0; }
+    table.options td { display: block; border: 0; padding: 4px 0; }
+  }
+  @media print {
+    .layout { display: block; }
+    .pad, .pad-open, .buttons, .hints, .feedback, .progress, .reset, .howto { display: none !important; }
+    section.card { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<main>
+
+<header class="top">
+  <h1>Lesson 3: Solving Systems of Equations by Elimination</h1>
+  <p><strong>I can…</strong> use the elimination method to solve a system of linear equations.</p>
+</header>
+
+<div class="howto">
+  <strong>How to use this page:</strong>
+  <ol>
+    <li>Work each problem on paper or on the <strong>scratch board</strong> on the right side of the screen. It switches to the problem you're on. Draw with your finger, a stylus, or a mouse. (On a phone, tap <strong>✏️ Scratch board</strong> at the bottom.)</li>
+    <li>Type your answers in the boxes. Fractions like <span class="math">5/2</span> and decimals like <span class="math">2.5</span> both work.</li>
+    <li>Press <span class="pill check">Check my work</span> to see what's right (green) and what needs another try (red).</li>
+    <li>Stuck? Press <span class="pill help">I need help</span>. Each press shows one more hint.</li>
+  </ol>
+</div>
+
+<div class="progress" aria-live="polite">
+  <span id="progressText">0 of 4 sections correct</span>
+  <div class="bar"><div id="progressBar"></div></div>
+</div>
+
+<!-- ============ NOTES: STEPS ============ -->
+<section class="card" data-pad="notes" data-pad-title="Notes">
+  <h2>Notes: Solving a System by Elimination</h2>
+  <p class="tag">Read these steps. You'll use them for every example below.</p>
+  <ol class="steps">
+    <li>Make sure each equation is in <strong>standard form</strong> (<span class="math">Ax + By = C</span>).</li>
+    <li>If necessary, <strong>multiply</strong> one or both equations by a number so that the coefficients of a chosen variable are <strong>opposites</strong> (like <span class="math">3y</span> and <span class="math">−3y</span>).</li>
+    <li><strong>Add</strong> the equations. The chosen variable cancels out (is eliminated).</li>
+    <li><strong>Solve</strong> for the remaining variable.</li>
+    <li><strong>Substitute</strong> that value into one of the original equations to find the other variable.</li>
+    <li><strong>Check</strong> the solution in <em>both</em> original equations.</li>
+  </ol>
+</section>
+
+<!-- ============ EXAMPLE 1 ============ -->
+<section class="card" data-section="ex1" data-pad="ex1" data-pad-title="Example 1">
+  <h2>Example 1</h2>
+  <p class="tag">Solve the system.</p>
+  <div class="system">3x + 3y = 12<br>6x − 3y = −3</div>
+
+  <div class="row">
+    <span class="label">Step 2 – Are the y coefficients already opposites?</span>
+    <select class="box" data-type="choice" data-answer="yes" aria-label="are the y coefficients opposites">
+      <option value="">— choose —</option>
+      <option value="yes">Yes, so no multiplying is needed</option>
+      <option value="no">No, we need to multiply first</option>
+    </select>
+  </div>
+  <div class="row">
+    <span class="label">Step 3 – Add the equations:</span>
+    <div class="line math"><input class="box" data-type="num" data-answer="9" aria-label="x coefficient after adding">x = <input class="box" data-type="num" data-answer="9" aria-label="right side after adding"></div>
+  </div>
+  <div class="row">
+    <span class="label">Step 4 – Solve for x:</span>
+    <div class="line math">x = <input class="box" data-type="num" data-answer="1" aria-label="x"></div>
+  </div>
+  <div class="row">
+    <span class="label">Step 5 – Substitute to find y:</span>
+    <div class="line math">y = <input class="box" data-type="num" data-answer="3" aria-label="y"></div>
+  </div>
+  <div class="buttons">
+    <button class="check" type="button">Check my work</button>
+    <button class="help" type="button">I need help</button>
+  </div>
+  <div class="feedback" aria-live="polite"></div>
+  <div class="hints" data-hints='[
+    "Look at the y terms: +3y and −3y. Opposites add up to zero, so you can add right away.",
+    "Add straight down: (3x + 6x) + (3y − 3y) = 12 + (−3). That gives 9x = 9.",
+    "Divide both sides by 9 to get x.",
+    "Put x = 1 into 3x + 3y = 12:  3 + 3y = 12. Subtract 3, then divide by 3. Check your point in BOTH equations."
+  ]'></div>
+</section>
+
+<!-- ============ EXAMPLE 2 ============ -->
+<section class="card" data-section="ex2" data-pad="ex2" data-pad-title="Example 2">
+  <h2>Example 2</h2>
+  <p class="tag">Solve the system.</p>
+  <div class="system">8x + 3y = −18<br>x − y = −5</div>
+
+  <div class="row">
+    <span class="label">Step 2 – Multiply the second equation by what number so the y's are opposites?</span>
+    <div class="line math">Multiply by <input class="box" data-type="num" data-answer="3" aria-label="multiplier"></div>
+  </div>
+  <div class="row">
+    <span class="label">Write the new second equation:</span>
+    <div class="line math"><input class="box" data-type="num" data-answer="3" aria-label="new x coefficient">x − <input class="box" data-type="num" data-answer="3" aria-label="new y coefficient">y = <input class="box" data-type="num" data-answer="-15" aria-label="new right side"></div>
+  </div>
+  <div class="row">
+    <span class="label">Step 3 – Add the equations:</span>
+    <div class="line math"><input class="box" data-type="num" data-answer="11" aria-label="x coefficient after adding">x = <input class="box" data-type="num" data-answer="-33" aria-label="right side after adding"></div>
+  </div>
+  <div class="row">
+    <span class="label">Step 4 &amp; 5 – Solve for x, then find y:</span>
+    <div class="line math">x = <input class="box" data-type="num" data-answer="-3" aria-label="x"> &nbsp;&nbsp; y = <input class="box" data-type="num" data-answer="2" aria-label="y"></div>
+  </div>
+  <div class="buttons">
+    <button class="check" type="button">Check my work</button>
+    <button class="help" type="button">I need help</button>
+  </div>
+  <div class="feedback" aria-live="polite"></div>
+  <div class="hints" data-hints='[
+    "The y terms are +3y and −y. What can you multiply −y by to get −3y? Then 3y and −3y are opposites.",
+    "Multiply EVERY term in x − y = −5 by 3:  3x − 3y = −15.  Don’t forget the right side!",
+    "Add:  8x + 3x = 11x,  3y − 3y = 0,  −18 + (−15) = −33.  So 11x = −33.",
+    "x = −33 ÷ 11. Then put x into x − y = −5 to find y:  −3 − y = −5."
+  ]'></div>
+</section>
+
+<!-- ============ EXAMPLE 3 ============ -->
+<section class="card" data-section="ex3" data-pad="ex3" data-pad-title="Example 3">
+  <h2>Example 3</h2>
+  <p class="tag">Solve the system. This time, you need to multiply <em>both</em> equations.</p>
+  <div class="system">3x + 3y = 9<br>5x + 4y = 10</div>
+
+  <div class="row">
+    <span class="label">Step 2 – To eliminate y, multiply the first equation by 4 and the second equation by −3:</span>
+    <div class="line math" style="margin-bottom:8px">12x + 12y = <input class="box" data-type="num" data-answer="36" aria-label="first new right side"></div>
+    <div class="line math"><input class="box" data-type="num" data-answer="-15" aria-label="second new x coefficient">x − 12y = <input class="box" data-type="num" data-answer="-30" aria-label="second new right side"></div>
+  </div>
+  <div class="row">
+    <span class="label">Step 3 – Add the equations:</span>
+    <div class="line math"><input class="box" data-type="num" data-answer="-3" aria-label="x coefficient after adding">x = <input class="box" data-type="num" data-answer="6" aria-label="right side after adding"></div>
+  </div>
+  <div class="row">
+    <span class="label">Step 4 &amp; 5 – Solve for x, then find y:</span>
+    <div class="line math">x = <input class="box" data-type="num" data-answer="-2" aria-label="x"> &nbsp;&nbsp; y = <input class="box" data-type="num" data-answer="5" aria-label="y"></div>
+  </div>
+  <div class="buttons">
+    <button class="check" type="button">Check my work</button>
+    <button class="help" type="button">I need help</button>
+  </div>
+  <div class="feedback" aria-live="polite"></div>
+  <div class="hints" data-hints='[
+    "3y and 4y don’t go into each other evenly. Find a number both go into: 12. Make one +12y and the other −12y.",
+    "First equation × 4:  12x + 12y = 36.   Second equation × (−3):  −15x − 12y = −30.  Multiply EVERY term!",
+    "Add:  12x + (−15x) = −3x,  12y − 12y = 0,  36 + (−30) = 6.  So −3x = 6.",
+    "x = 6 ÷ (−3). Put x into 3x + 3y = 9:  −6 + 3y = 9. Then check your point in 5x + 4y = 10."
+  ]'></div>
+</section>
+
+<!-- ============ WORD PROBLEM ============ -->
+<section class="card" data-section="word" data-pad="word" data-pad-title="Word Problem" data-pad-note="Ashley: 3 tulip + 1 crocus = $27 · Jess: 14 tulip + 6 crocus = $142">
+  <h2>Word Problem</h2>
+  <p>Ashley sold <strong>3</strong> packages of tulip bulbs and <strong>1</strong> package of crocus bulbs for a total of <strong>$27</strong>. Jess sold <strong>14</strong> packages of tulip bulbs and <strong>6</strong> packages of crocus bulbs for a total of <strong>$142</strong>. Find the cost of a package of tulip bulbs and the cost of a package of crocus bulbs.</p>
+
+  <div class="row">
+    <span class="label">1. Define your variables:</span>
+    <div class="math">Let <strong>t</strong> = cost of one package of tulip bulbs<br>Let <strong>c</strong> = cost of one package of crocus bulbs</div>
+  </div>
+  <div class="row">
+    <span class="label">2. Write the equations:</span>
+    <div class="line math" style="margin-bottom:8px">
+      <span class="hint-text" style="min-width:110px">Ashley:</span>
+      <input class="box" data-type="num" data-answer="3" aria-label="Ashley tulip packages"> t + c =
+      <input class="box" data-type="num" data-answer="27" aria-label="Ashley total">
+    </div>
+    <div class="line math">
+      <span class="hint-text" style="min-width:110px">Jess:</span>
+      <input class="box" data-type="num" data-answer="14" aria-label="Jess tulip packages"> t +
+      <input class="box" data-type="num" data-answer="6" aria-label="Jess crocus packages"> c =
+      <input class="box" data-type="num" data-answer="142" aria-label="Jess total">
+    </div>
+  </div>
+  <div class="row">
+    <span class="label">3. Solve: multiply Ashley's equation by what number so the c's are opposites?</span>
+    <div class="line math">Multiply by <input class="box" data-type="num" data-answer="-6" aria-label="multiplier"></div>
+  </div>
+  <div class="row">
+    <span class="label">4. Answer the question asked:</span>
+    <div class="line">A package of tulip bulbs costs $<input class="box" data-type="num" data-answer="5" aria-label="tulip cost"> and a package of crocus bulbs costs $<input class="box" data-type="num" data-answer="12" aria-label="crocus cost">.</div>
+  </div>
+  <div class="buttons">
+    <button class="check" type="button">Check my work</button>
+    <button class="help" type="button">I need help</button>
+  </div>
+  <div class="feedback" aria-live="polite"></div>
+  <div class="hints" data-hints='[
+    "Each person gets one equation: (packages of tulips) × t + (packages of crocus) × c = total money.",
+    "Ashley: 3t + c = 27.  Jess: 14t + 6c = 142.  The c terms are c and 6c.",
+    "Multiply Ashley’s equation by −6:  −18t − 6c = −162.  Now −6c and +6c are opposites.",
+    "Add:  −18t + 14t = −4t  and  −162 + 142 = −20.  So −4t = −20 → t = 5. Put t = 5 into 3t + c = 27 to find c."
+  ]'></div>
+</section>
+
+<div class="reset"><button type="button" id="resetAll">Clear all my answers</button></div>
+
+</main>
+
+<aside class="pad" aria-label="Scratch board">
+  <div class="pad-inner">
+    <div class="pad-head">
+      <div class="grow">
+        <div class="pad-title"></div>
+        <div class="pad-problem"></div>
+      </div>
+      <button type="button" class="pad-close">✕ Back to questions</button>
+    </div>
+    <div class="tools"></div>
+    <div class="pad-stage"></div>
+  </div>
+</aside>
+</div>
+
+<button type="button" class="pad-open">✏️ Scratch board</button>
+
+<script>
+(function () {
+  var STORE_KEY = "lesson3-elimination-student-v1";
+
+  // ---------- answer checking ----------
+  function cleanText(s) {
+    return String(s)
+      .toLowerCase()
+      .replace(/[−–—]/g, "-")   // fancy minus / dashes
+      .replace(/\s+/g, "")
+      .replace(/\*/g, "")
+      .replace(/^[a-z]=/, "")                 // allow "y=3x-6"
+      .replace(/^\+/, "");
+  }
+
+  function toNumber(s) {
+    var t = cleanText(s).replace(/^\((.*)\)$/, "$1");
+    if (t === "") return NaN;
+    var m = t.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
+    if (m) return parseFloat(m[1]) / parseFloat(m[2]);
+    if (/^-?(\d+\.?\d*|\.\d+)$/.test(t)) return parseFloat(t);
+    return NaN;
+  }
+
+  function isRight(el) {
+    var type = el.dataset.type;
+    var ans = el.dataset.answer;
+    var val = el.value;
+    if (type === "choice") return val === ans;
+    if (type === "num") {
+      var n = toNumber(val);
+      return !isNaN(n) && Math.abs(n - parseFloat(ans)) < 1e-9;
+    }
+    if (type === "expr") {
+      var v = cleanText(val);
+      return ans.split("|").some(function (a) { return cleanText(a) === v; });
+    }
+    return false;
+  }
+
+  // ---------- sections ----------
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section[data-section]"));
+  var done = {};
+
+  function updateProgress() {
+    var count = sections.filter(function (s) { return done[s.dataset.section]; }).length;
+    document.getElementById("progressText").textContent =
+      count + " of " + sections.length + " sections correct" + (count === sections.length ? " — great job!" : "");
+    document.getElementById("progressBar").style.width = (100 * count / sections.length) + "%";
+  }
+
+  sections.forEach(function (sec) {
+    var boxes = Array.prototype.slice.call(sec.querySelectorAll(".box"));
+    var fb = sec.querySelector(".feedback");
+    var hintsBox = sec.querySelector(".hints");
+    var hints = JSON.parse(hintsBox.dataset.hints);
+    var shown = 0;
+    var helpBtn = sec.querySelector("button.help");
+
+    sec.querySelector("button.check").addEventListener("click", function () {
+      var right = 0, blank = 0;
+      boxes.forEach(function (b) {
+        b.classList.remove("right", "wrong");
+        if (b.value.trim() === "") { blank++; b.classList.add("wrong"); return; }
+        if (isRight(b)) { right++; b.classList.add("right"); }
+        else b.classList.add("wrong");
+      });
+      fb.className = "feedback";
+      if (right === boxes.length) {
+        fb.classList.add("good");
+        fb.textContent = "✓ All correct! Nice work.";
+        done[sec.dataset.section] = true;
+      } else {
+        fb.classList.add("bad");
+        var msg = right + " of " + boxes.length + " correct. Fix the red boxes and check again.";
+        if (blank) msg += " (" + blank + " still blank.)";
+        msg += " Stuck? Press “I need help.”";
+        fb.textContent = msg;
+        done[sec.dataset.section] = false;
+      }
+      updateProgress();
+      save();
+    });
+
+    helpBtn.addEventListener("click", function () {
+      if (shown < hints.length) {
+        var p = document.createElement("p");
+        p.textContent = "Hint " + (shown + 1) + ": " + hints[shown];
+        hintsBox.appendChild(p);
+        shown++;
+        hintsBox.classList.add("show");
+      }
+      helpBtn.textContent = shown < hints.length ? "I need more help" : "No more hints — ask your teacher!";
+      if (shown >= hints.length) helpBtn.disabled = true;
+    });
+
+    // clear the color when a student edits a box
+    boxes.forEach(function (b) {
+      var evt = b.tagName === "SELECT" ? "change" : "input";
+      b.addEventListener(evt, function () { b.classList.remove("right", "wrong"); save(); });
+    });
+  });
+
+  // ---------- save answers in this browser ----------
+  var allFields = Array.prototype.slice.call(document.querySelectorAll(".box"));
+
+  function save() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(allFields.map(function (f) { return f.value; })));
+    } catch (e) {}
+  }
+  function load() {
+    try {
+      var data = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+      if (Array.isArray(data)) data.forEach(function (v, i) { if (allFields[i]) allFields[i].value = v; });
+    } catch (e) {}
+  }
+  document.getElementById("resetAll").addEventListener("click", function () {
+    if (!confirm("Clear all your answers and drawings on this page?")) return;
+    try {
+      localStorage.removeItem(STORE_KEY);
+      ["notes", "ex1", "ex2", "ex3", "word"].forEach(function (id) { localStorage.removeItem(STORE_KEY + "-pad-" + id); });
+    } catch (e) {}
+    location.reload();
+  });
+
+  // ---------- split-screen scratch board (finger / stylus / mouse) ----------
+  var S = 2;                           // drawing pixels per screen pixel (keeps lines sharp)
+  var COLORS = [["Black", "#1f2937"], ["Blue", "#2f5bd3"], ["Red", "#c62828"]];
+  var pad = document.querySelector(".pad");
+  var stage = pad.querySelector(".pad-stage");
+  var titleEl = pad.querySelector(".pad-title");
+  var probEl = pad.querySelector(".pad-problem");
+  var tools = pad.querySelector(".tools");
+  var color = COLORS[0][1], erasing = false;
+  var boards = {}, active = null;
+  var targets = Array.prototype.slice.call(document.querySelectorAll("[data-pad]"));
+
+  function makeBoard(id, sec) {
+    var key = STORE_KEY + "-pad-" + id;
+    var canvas = document.createElement("canvas");
+    canvas.width = 2; canvas.height = 2;
+    canvas.setAttribute("aria-label", "scratch board for " + sec.dataset.padTitle);
+    stage.appendChild(canvas);
+    var ctx = canvas.getContext("2d");
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    var sys = sec.querySelector(".system");
+    var bd = {
+      canvas: canvas, ctx: ctx, undo: [],
+      title: sec.dataset.padTitle,
+      problem: sys ? sys.outerHTML : (sec.dataset.padNote ? '<div class="note">' + sec.dataset.padNote + "</div>" : ""),
+      store: function () { try { localStorage.setItem(key, canvas.toDataURL("image/png")); } catch (e) {} },
+      pushUndo: function () { bd.undo.push(ctx.getImageData(0, 0, canvas.width, canvas.height)); if (bd.undo.length > 25) bd.undo.shift(); }
+    };
+    try {
+      var saved = localStorage.getItem(key);
+      if (saved) { var img = new Image(); img.onload = function () { grow(bd, img.width, img.height); ctx.drawImage(img, 0, 0); }; img.src = saved; }
+    } catch (e) {}
+
+    function pos(e) {
+      var r = canvas.getBoundingClientRect();
+      return { x: (e.clientX - r.left) * canvas.width / r.width, y: (e.clientY - r.top) * canvas.height / r.height };
+    }
+    var drawing = false, last = null, activeId = null;
+    canvas.addEventListener("pointerdown", function (e) {
+      if (drawing) return;               // ignore a second finger
+      drawing = true; activeId = e.pointerId;
+      canvas.setPointerCapture(e.pointerId);
+      bd.pushUndo();
+      last = pos(e);
+      ctx.globalCompositeOperation = erasing ? "destination-out" : "source-over";
+      ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = erasing ? 50 : 6;
+      ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(last.x + 0.1, last.y + 0.1); ctx.stroke();
+      e.preventDefault();
+    });
+    canvas.addEventListener("pointermove", function (e) {
+      if (!drawing || e.pointerId !== activeId) return;
+      var evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+      if (!evs.length) evs = [e];
+      evs.forEach(function (ev) {
+        var p = pos(ev);
+        ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+        last = p;
+      });
+      e.preventDefault();
+    });
+    function end(e) {
+      if (!drawing || e.pointerId !== activeId) return;
+      drawing = false; activeId = null;
+      ctx.globalCompositeOperation = "source-over";
+      bd.store();
+    }
+    canvas.addEventListener("pointerup", end);
+    canvas.addEventListener("pointercancel", end);
+    return bd;
+  }
+
+  targets.forEach(function (sec) {
+    var id = sec.dataset.pad;
+    if (!boards[id]) boards[id] = makeBoard(id, sec);
+  });
+
+  // shared toolbar
+  var penButtons = [];
+  function makeBtn(html, onClick) {
+    var b = document.createElement("button");
+    b.type = "button"; b.innerHTML = html;
+    b.addEventListener("click", onClick);
+    tools.appendChild(b);
+    return b;
+  }
+  function selectTool(btn) {
+    penButtons.forEach(function (b) { b.classList.remove("on"); });
+    btn.classList.add("on");
+  }
+  COLORS.forEach(function (c, i) {
+    var b = makeBtn('<span class="dot" style="background:' + c[1] + '"></span>' + c[0], function () {
+      color = c[1]; erasing = false; selectTool(b);
+    });
+    penButtons.push(b);
+    if (i === 0) b.classList.add("on");
+  });
+  var eraserBtn = makeBtn("Eraser", function () { erasing = true; selectTool(eraserBtn); });
+  penButtons.push(eraserBtn);
+  var sp = document.createElement("span"); sp.className = "spacer"; tools.appendChild(sp);
+  makeBtn("↶ Undo", function () {
+    var bd = boards[active];
+    if (!bd || !bd.undo.length) return;
+    bd.ctx.putImageData(bd.undo.pop(), 0, 0);
+    bd.store();
+  });
+  makeBtn("Clear", function () {
+    var bd = boards[active];
+    if (!bd) return;
+    bd.pushUndo();
+    bd.ctx.clearRect(0, 0, bd.canvas.width, bd.canvas.height);
+    bd.store();
+  });
+
+  // make a board bigger (never smaller, so nothing drawn is lost)
+  function grow(bd, w, h) {
+    var c = bd.canvas;
+    w = Math.max(c.width, Math.ceil(w)); h = Math.max(c.height, Math.ceil(h));
+    if (w === c.width && h === c.height) return;
+    var keep = null;
+    if (c.width > 2) { keep = document.createElement("canvas"); keep.width = c.width; keep.height = c.height; keep.getContext("2d").drawImage(c, 0, 0); }
+    c.width = w; c.height = h;
+    if (keep) bd.ctx.drawImage(keep, 0, 0);
+    c.style.width = (w / S) + "px";
+    c.style.height = (h / S) + "px";
+  }
+  // fill the whole right-hand panel
+  function fit() {
+    var bd = boards[active];
+    if (!bd) return;
+    var r = stage.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    grow(bd, r.width * S, r.height * S);
+  }
+
+  function show(id) {
+    if (id === active || !boards[id]) return;
+    if (active) boards[active].canvas.classList.remove("active");
+    active = id;
+    var bd = boards[id];
+    bd.canvas.classList.add("active");
+    titleEl.innerHTML = "Scratch board · " + bd.title + " <small>(not graded)</small>";
+    probEl.innerHTML = bd.problem;
+    fit();
+  }
+
+  // follow whichever problem is on screen
+  function pick() {
+    var line = window.innerHeight * 0.4;
+    var cur = targets[0];
+    targets.forEach(function (t) { if (t.getBoundingClientRect().top <= line) cur = t; });
+    show(cur.dataset.pad);
+  }
+  var ticking = false;
+  window.addEventListener("scroll", function () {
+    if (ticking || document.body.classList.contains("pad-full")) return;
+    ticking = true;
+    requestAnimationFrame(function () { ticking = false; pick(); });
+  }, { passive: true });
+  targets.forEach(function (t) {
+    t.addEventListener("focusin", function () { show(t.dataset.pad); });
+  });
+  window.addEventListener("resize", fit);
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(stage);
+
+  // phones: open the board full screen
+  document.querySelector(".pad-open").addEventListener("click", function () {
+    pick();
+    document.body.classList.add("pad-full");
+    fit();
+  });
+  pad.querySelector(".pad-close").addEventListener("click", function () {
+    document.body.classList.remove("pad-full");
+  });
+
+  pick();
+
+  load();
+  updateProgress();
+})();
+</script>
+</body>
+</html>
