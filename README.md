@@ -17,3 +17,7 @@ Open `index.html` in any modern browser. No install or build step needed.
 Keyboard: 1–4 to answer, 1–3 to pick a chest, Enter for the next turn, P to pause.
 
 The class list and settings are saved only in the browser you use.
+
+## Play online
+
+Hosted with GitHub Pages: https://dgarvey-lang.github.io/substitution-challenge/
