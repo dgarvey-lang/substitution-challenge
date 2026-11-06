@@ -11,7 +11,7 @@ A projector-friendly, two-team classroom game for practicing systems of equation
 Open `index.html` in any modern browser. No install or build step needed.
 
 1. Paste your class list (one name per line) and shuffle into two teams.
-2. Pick game length, time per answer, and question types.
+2. Pick the question types. There is no timer: click **Next team** when the class is ready and **Finish game** whenever you want to see results.
 3. Click **Start the clash**.
 
 Keyboard: 1–4 to answer, 1–3 to pick a chest, Enter for the next turn, P to pause.
